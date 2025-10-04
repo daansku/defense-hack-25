@@ -1,1 +1,4 @@
 opencv-python>=4.9.0.80
+ultralytics>=8.1.2
+torch>=2.2.0
+pillow>=10.4.0
