@@ -4,25 +4,19 @@
       "id": 1,
       "location_name": "Enemy 1",
       "description": "The main entrance area with seating and information desk.",
-      "coordinates": { "x": 300, "y": 300 }
+      "coordinates": { "x": 600, "y": 1100 }
     },
     {
       "id": 2,
       "location_name": "Enemy 2",
       "description": "A long corridor with doors to various rooms.",
-      "coordinates": { "x": 92, "y": 264 }
+      "coordinates": { "x": 350, "y": 1100 }
     },
     {
       "id": 3,
       "location_name": "Enemy 3",
       "description": "A room equipped for meetings and presentations.",
-      "coordinates": { "x": 190, "y": 200 }
-    },
-    {
-      "id": 4,
-      "location_name": "Enemy 4",
-      "description": "A place to eat and relax with colleagues.",
-      "coordinates": { "x": 12, "y": 300 }
+      "coordinates": { "x": 570, "y": 260 }
     }
   ],
   "friendly_positions": [

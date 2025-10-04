@@ -5,6 +5,7 @@ import time
 import glob
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from typing import Dict, Optional, Tuple
 
 # Initialize Pygame
 pygame.init()
@@ -13,49 +14,92 @@ pygame.init()
 pygame.font.init()
 font = pygame.font.SysFont('JetBrains Mono', 16)
 
+# Window dimensions
+WINDOW_WIDTH = 500
+WINDOW_HEIGHT = 800
+
 # Constants
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
-ROOM_WIDTH = 600
-ROOM_HEIGHT = 400
-NODE_RADIUS = 10
+NODE_RADIUS = 8
 FLASH_DURATION = 1.0  # Duration of flash in seconds
 DETECTION_CHECK_INTERVAL = 1.0  # How often to check for detections (seconds)
 IMAGE_DISPLAY_SIZE = (200, 150)  # Size for the detection image thumbnail
 
 # Colors
 BLACK = (0, 0, 0)
-DARK_GREY = (40, 40, 40)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
+
+# Node states
+class NodeState:
+    def __init__(self):
+        self.is_flashing = False
+        self.last_detection_time = 0
+        self.active_detection = False
+        self.current_detection_image = None
+        self.current_image_path = None
+        self.current_detection_data = None
+        self.show_detection_info = False
+
+# Global variables
+node_states: Dict[int, NodeState] = {1: NodeState(), 2: NodeState(), 3: NodeState()}
+last_detection_check = 0
+
+def load_floormap():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    floormap_path = os.path.join(os.path.dirname(script_dir), "floormap.png")
+    try:
+        original_map = pygame.image.load(floormap_path)
+        # Calculate scaling factors for both dimensions
+        scale_x = WINDOW_WIDTH / original_map.get_width()
+        scale_y = WINDOW_HEIGHT / original_map.get_height()
+        # Use the smaller scaling factor to maintain aspect ratio
+        scale = min(scale_x, scale_y)
+        
+        # Calculate new dimensions
+        new_width = int(original_map.get_width() * scale)
+        new_height = int(original_map.get_height() * scale)
+        
+        # Scale the image
+        scaled_map = pygame.transform.scale(original_map, (new_width, new_height))
+        
+        # Create a black surface the size of the window
+        final_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+        final_surface.fill((0, 0, 0))
+        
+        # Calculate position to center the image
+        x_offset = (WINDOW_WIDTH - new_width) // 2
+        y_offset = (WINDOW_HEIGHT - new_height) // 2
+        
+        # Blit the scaled image onto the surface
+        final_surface.blit(scaled_map, (x_offset, y_offset))
+        
+        return {
+            'surface': final_surface,
+            'scale': scale,
+            'offset': (x_offset, y_offset)
+        }
+    except (pygame.error, FileNotFoundError) as e:
+        print(f"Error loading floormap: {e}")
+        return None
+
+# Load floormap and get scaling information
+FLOORMAP_DATA = load_floormap()
 
 # Create the window
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Battlefield UI")
 
-# Global variables for flash control and UI state
-last_detection_time = 0
-is_flashing = False
-last_detection_check = 0
-active_detection = False
-current_detection_image = None
-current_image_path = None
-current_detection_data = None
-show_detection_info = False
-
 class MotionDetectionHandler(FileSystemEventHandler):
     def on_created(self, event):
         if not event.is_directory and event.src_path.endswith(('.jpg', '.jpeg', '.png')):
-            global last_detection_time, is_flashing
-            last_detection_time = time.time()
-            is_flashing = True
+            # We'll handle the flashing when we detect which node it's for
+            pass
 
 def setup_motion_detection_observer():
     """Set up the file system observer for the motion_detected directory"""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     motion_detected_dir = os.path.join(os.path.dirname(script_dir), "motion_detected")
     
-    # Create motion_detected directory if it doesn't exist
     if not os.path.exists(motion_detected_dir):
         os.makedirs(motion_detected_dir)
     
@@ -74,60 +118,64 @@ def load_and_scale_image(image_path):
         return None
 
 def check_active_detections():
-    """Check if there are any active detections for node_id = 1"""
-    global active_detection, last_detection_check, current_detection_image, current_image_path, current_detection_data
+    """Check if there are any active detections for nodes"""
+    global last_detection_check
     
     current_time = time.time()
-    # Only check periodically to avoid excessive file system operations
     if current_time - last_detection_check < DETECTION_CHECK_INTERVAL:
-        return active_detection
+        return
     
     last_detection_check = current_time
     script_dir = os.path.dirname(os.path.abspath(__file__))
     detections_dir = os.path.join(os.path.dirname(script_dir), "detections")
     
     if not os.path.exists(detections_dir):
-        active_detection = False
-        current_detection_image = None
-        current_image_path = None
-        current_detection_data = None
-        return False
+        for state in node_states.values():
+            state.active_detection = False
+            state.current_detection_image = None
+            state.current_image_path = None
+            state.current_detection_data = None
+        return
     
     # Get all detection files
     detection_files = glob.glob(os.path.join(detections_dir, "detection_*.json"))
     
-    # Get the most recent detection file
-    latest_detection = None
-    latest_time = 0
+    # Track latest detection for each node
+    latest_detections = {node_id: {'time': 0, 'data': None} for node_id in node_states.keys()}
     
-    # Check each detection file for node_id = 1
+    # Process all detection files
     for detection_file in detection_files:
         try:
             with open(detection_file, 'r') as f:
                 data = json.load(f)
-                if data.get("node_id") == 1:
+                node_id = data.get("node_id")
+                if node_id in node_states:
                     timestamp = time.mktime(time.strptime(data["timestamp"].split(".")[0], "%Y-%m-%dT%H:%M:%S"))
-                    if timestamp > latest_time:
-                        latest_time = timestamp
-                        latest_detection = data
+                    if timestamp > latest_detections[node_id]['time']:
+                        latest_detections[node_id]['time'] = timestamp
+                        latest_detections[node_id]['data'] = data
         except (json.JSONDecodeError, FileNotFoundError):
             continue
     
-    if latest_detection:
-        active_detection = True
-        current_detection_data = latest_detection
-        # Load the associated image if it's different from the current one
-        image_path = os.path.join(os.path.dirname(script_dir), latest_detection["image_path"].replace('\\', '/'))
-        if image_path != current_image_path:
-            current_image_path = image_path
-            current_detection_image = load_and_scale_image(image_path)
-        return True
-    
-    active_detection = False
-    current_detection_image = None
-    current_image_path = None
-    current_detection_data = None
-    return False
+    # Update node states with latest detections
+    for node_id, latest in latest_detections.items():
+        state = node_states[node_id]
+        if latest['data']:
+            state.active_detection = True
+            state.current_detection_data = latest['data']
+            # Load the associated image if it's different from the current one
+            image_path = os.path.join(os.path.dirname(script_dir), 
+                                    latest['data']["image_path"].replace('\\', '/'))
+            if image_path != state.current_image_path:
+                state.current_image_path = image_path
+                state.current_detection_image = load_and_scale_image(image_path)
+                state.last_detection_time = time.time()
+                state.is_flashing = True
+        else:
+            state.active_detection = False
+            state.current_detection_image = None
+            state.current_image_path = None
+            state.current_detection_data = None
 
 def load_nodes():
     """Load nodes from the JSON file"""
@@ -137,19 +185,15 @@ def load_nodes():
         data = json.load(file)
     return data
 
-def get_node_color():
+def get_node_color(node_id: int) -> Tuple[int, int, int]:
     """Determine the node color based on flash state and active detections"""
-    global is_flashing, last_detection_time
+    state = node_states[node_id]
     
-    # Check for active detections
-    has_active_detections = check_active_detections()
-    
-    if is_flashing or has_active_detections:
+    if state.is_flashing or state.active_detection:
         current_time = time.time()
-        if is_flashing and current_time - last_detection_time > FLASH_DURATION:
-            is_flashing = False
-            # If there are active detections, keep flashing
-            if not has_active_detections:
+        if state.is_flashing and current_time - state.last_detection_time > FLASH_DURATION:
+            state.is_flashing = False
+            if not state.active_detection:
                 return WHITE
         
         # Flash effect: alternate between red and white every 0.2 seconds
@@ -157,7 +201,15 @@ def get_node_color():
     
     return WHITE
 
-def is_point_in_circle(point, center, radius):
+def scale_coordinates(x: int, y: int) -> Tuple[int, int]:
+    """Scale coordinates based on the floormap scaling"""
+    if FLOORMAP_DATA:
+        scale = FLOORMAP_DATA['scale']
+        offset_x, offset_y = FLOORMAP_DATA['offset']
+        return (int(x * scale) + offset_x, int(y * scale) + offset_y)
+    return (x, y)
+
+def is_point_in_circle(point: Tuple[int, int], center: Tuple[int, int], radius: int) -> bool:
     """Check if a point is inside a circle"""
     return (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2 <= radius ** 2
 
@@ -187,45 +239,43 @@ def draw_battlefield():
     # Fill background with black
     screen.fill(BLACK)
     
-    # Calculate room position to center it
-    room_x = (WINDOW_WIDTH - ROOM_WIDTH) // 2
-    room_y = (WINDOW_HEIGHT - ROOM_HEIGHT) // 2
+    # Draw the floormap as background
+    if FLOORMAP_DATA:
+        screen.blit(FLOORMAP_DATA['surface'], (0, 0))
     
-    # Draw dark grey room
-    room_rect = pygame.Rect(room_x, room_y, ROOM_WIDTH, ROOM_HEIGHT)
-    pygame.draw.rect(screen, DARK_GREY, room_rect)
+    # Check for active detections
+    check_active_detections()
     
     # Load and draw nodes
     data = load_nodes()
-    node_pos = None
     
+    # Draw all monitored nodes
     for node in data["nodes"]:
-        if node["id"] == 1:  # We only want node 1 for now
-            # Store node position for image placement
-            node_pos = (room_x + node["coordinates"]["x"], 
-                       room_y + node["coordinates"]["y"])
+        if node["id"] in node_states:
+            # Scale the node coordinates
+            node_pos = scale_coordinates(node["coordinates"]["x"], node["coordinates"]["y"])
             
             # Draw the node with dynamic color
-            node_color = get_node_color()
+            node_color = get_node_color(node["id"])
             pygame.draw.circle(screen, node_color, node_pos, NODE_RADIUS)
-            break
-    
-    # Draw detection image and info if toggled on
-    if show_detection_info and current_detection_image and node_pos:
-        # Position the image to the right of the node
-        image_x = node_pos[0] + NODE_RADIUS + 10
-        image_y = node_pos[1] - IMAGE_DISPLAY_SIZE[1] // 2
-        
-        # Draw a white border around the image
-        border_rect = pygame.Rect(image_x - 2, image_y - 2,
-                                IMAGE_DISPLAY_SIZE[0] + 4, IMAGE_DISPLAY_SIZE[1] + 4)
-        pygame.draw.rect(screen, WHITE, border_rect)
-        
-        # Draw the image
-        screen.blit(current_detection_image, (image_x, image_y))
-        
-        # Draw detection information
-        draw_detection_info(screen, (image_x, image_y), current_detection_data)
+            
+            # Draw detection info if toggled on for this node
+            state = node_states[node["id"]]
+            if state.show_detection_info and state.current_detection_image:
+                # Position the image to the right of the node
+                image_x = node_pos[0] + NODE_RADIUS + 10
+                image_y = node_pos[1] - IMAGE_DISPLAY_SIZE[1] // 2
+                
+                # Draw a white border around the image
+                border_rect = pygame.Rect(image_x - 2, image_y - 2,
+                                        IMAGE_DISPLAY_SIZE[0] + 4, IMAGE_DISPLAY_SIZE[1] + 4)
+                pygame.draw.rect(screen, WHITE, border_rect)
+                
+                # Draw the image
+                screen.blit(state.current_detection_image, (image_x, image_y))
+                
+                # Draw detection information
+                draw_detection_info(screen, (image_x, image_y), state.current_detection_data)
 
 def main():
     # Set up the file system observer
@@ -233,7 +283,6 @@ def main():
     
     running = True
     clock = pygame.time.Clock()
-    global show_detection_info
     
     try:
         while running:
@@ -243,20 +292,17 @@ def main():
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Left click
-                        # Calculate room position
-                        room_x = (WINDOW_WIDTH - ROOM_WIDTH) // 2
-                        room_y = (WINDOW_HEIGHT - ROOM_HEIGHT) // 2
-                        
-                        # Get node position
+                        # Check all monitored nodes for clicks
                         data = load_nodes()
                         for node in data["nodes"]:
-                            if node["id"] == 1:
-                                node_pos = (room_x + node["coordinates"]["x"],
-                                          room_y + node["coordinates"]["y"])
-                                # Check if click is on node
+                            if node["id"] in node_states:
+                                node_pos = scale_coordinates(
+                                    node["coordinates"]["x"],
+                                    node["coordinates"]["y"]
+                                )
                                 if is_point_in_circle(event.pos, node_pos, NODE_RADIUS):
-                                    show_detection_info = not show_detection_info
-                                break
+                                    node_states[node["id"]].show_detection_info = not node_states[node["id"]].show_detection_info
+                                    break
             
             # Draw everything
             draw_battlefield()
