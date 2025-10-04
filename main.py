@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import os
 import logging
+from server.detection import get_latest_image, detect_objects
 
 PIXEL_DIFF_THRESH = 0.1   # Threshold for pixel difference (0-1 range)
 FRAME_SKIP = 60            # Process every Nth frame
@@ -323,6 +324,25 @@ def process_folder_images(folder_path="captured_images"):
         return None
 
 
+def detect_obj():
+    motion_dir = Path("motion_detected")
+    latest_image = get_latest_image(motion_dir)
+    
+    if latest_image is None:
+        print("No images found to process")
+        exit(1)
+        
+    print(f"Processing latest image: {latest_image}")
+    results = detect_objects(str(latest_image))
+    
+    # Print summary
+    print("\nDetection Summary:")
+    print(f"Total detections: {results['total_detections']}")
+    print("\nObject counts:")
+    for obj, count in results['object_counts'].items():
+        print(f"{obj}: {count}")
+
+
 def main():
     try:
         # Create output directories
@@ -392,6 +412,8 @@ def main():
                         
                         # Save the frame with bounding box
                         save_frame(frame_with_box, output_dir="motion_detected")
+                        detect_obj()
+                        exit(0)
                 
                 # Update previous frame
                 prev_frame_rgb = current_frame_rgb.copy()
