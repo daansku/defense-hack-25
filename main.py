@@ -430,8 +430,7 @@ def main():
                         
                         # Only save the frame if it's the last one
                         if after_det_frames == MAX_AFTER_DET_FRAMES:
-                            # Save both the frame with bounding box and the cropped version
-                            save_frame(frame_with_box, output_dir="motion_detected")
+                    
                             # Save cropped version by calling detect_motion with save_crop=True
                             detect_motion(
                                 prev_frame_rgb, 
@@ -439,10 +438,8 @@ def main():
                                 thresh=PIXEL_DIFF_THRESH,
                                 save_crop=True,
                                 original_frame=frame,
-                                output_dir="motion_detected"
+                                output_dir="/mnt"
                             )
-                            detect_obj()
-                            print(img_to_bytestr(get_latest_image("motion_detected")))
                             exit(0)
 
                         if FRAME_SKIP == INITIAL_FRAME_SKIP:
