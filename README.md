@@ -1,75 +1,116 @@
-Here's a list of all the functions in the code and what they do:
+# Defense Hack 2025 - Motion Detection and Visualization System
 
-Core Motion Detection Functions
+This project implements a real-time motion detection and visualization system using computer vision and object detection. The system consists of two main components:
 
-1. detect_motion(image1, image2, thresh, save_crop, original_frame, output_dir)
-   - Compares two grayscale images to detect motion
-   - Creates a binary map where pixels above threshold are marked as motion
-   - Applies morphological operations to clean up noise
-   - Finds bounding box of motion area
-   - Optionally saves cropped image of detected motion
-   - Returns: (image2 if motion detected, number of changed pixels, bounding box, difference visualization)
+1. Motion detection and object recognition pipeline
+2. Interactive battlefield visualization demo
 
-2. find_bounding_box(diff_map, min_size)
-   - Takes a binary motion map and finds the smallest rectangle that contains all motion pixels
-   - Adds 10 pixels of padding around the motion area
-   - Filters out boxes that are too small (< min_size)
-   - Filters out boxes that cover >90% of image (likely false positives)
-   - Returns: (x1, y1, x2, y2) coordinates or None
+Briefly about the context:
+The motion detection is performed at edge sensors placed along tree lines and fields. An edge sensor is a device that has at least a camera, a mini processor, a battery and a radio transmitter. Whenever motion is detected, the device segments the moving object and sends the image over the network of other edge sensors until the image reaches the main node which is, for example, a laptop that works as a hub for all edge sensors in its reach. The main node runs a classification model that turns the images into JSON files that list all classified objects. These JSON files are fed into a pipeline that generates FRAGO reports.
 
-Image Processing Functions
+## Project Structure
 
-3. convert_to_greyscale(image_path)
-   - Loads an image file and converts it to grayscale
-   - Normalizes pixel values to 0-1 range
-   - Returns: numpy array of shape (H, W) with values [0, 1]
+```
+defense-hack-25/
+├── detections/               # JSON files containing the details about each detection
+├── motion_detected/         # Captured and cropped motion detection images
+├── server/                  # Everything that should happen on the server
+│   ├── battlefield_ui.py    # Interactive visualization demo
+│   ├── detection.py        # Object detection using YOLOv8
+│   └── nodes.json          # Sample nodes for visualization demo
+├── main.py                 # Main motion detection script
+├── floormap.png           # Floor plan image for visualization demo
+└── requirements.txt       # Python dependencies
+```
 
-4. crop_and_compress(frame, bbox, quality)
-   - Crops a frame to the specified bounding box
-   - Applies JPEG compression to reduce file size
-   - Validates bbox coordinates are within bounds
-   - Returns: compressed cropped image or None if error
+## Features
 
-## File Management Functions
+- Real-time motion detection using OpenCV
+- Object detection using YOLOv8
+- Interactive demo with Pygame
+- Support for multiple detection nodes
+- Detection history and visualization
+- Automatic image cropping and saving
 
-5. save_frame(frame, bbox, output_dir, is_visualization)
-   - Saves a frame to disk with timestamp
-   - Optionally crops and compresses before saving
-   - Adds prefix "viz_" for visualization images, "capture_" for regular captures
-   - Returns: filename of saved image
+## Installation
 
-6. delete_oldest_image(folder, keep_count)
-   - Keeps only the N most recent images in a folder
-   - Deletes older images when count exceeds keep_count
-   - Useful for managing disk space
+1. Clone the repository:
 
-7. delete_all_images(folder_path)
-   - Deletes all image files (.jpg, .jpeg, .png, .bmp) in a folder
-   - Useful for clearing out folders on startup
-   - Logs how many images were deleted
+```bash
+gh repo clone daansku/defense-hack-25
+```
 
-Batch Processing Function
+2. Create and activate a virtual environment (recommended):
 
-8. process_folder_images(folder_path)
-   - Processes existing images in a folder
-   - Uses oldest image as background reference
-   - Uses newest image to detect motion
-   - Runs motion detection and saves results
-   - Returns: (background_gray, newest_frame, newest_gray, bbox) or None
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-Main Program
+3. Install dependencies:
 
-9. main()
-   - Entry point for the program
-   - Creates necessary directories
-   - Processes any existing images in folder
-   - Opens camera and starts live motion detection
-   - Processes every Nth frame (defined by FRAME_SKIP)
-   - Displays live video feed and difference visualization
-   - Exits when 'q' key is pressed
+```bash
+pip install -r requirements.txt
+```
 
-Constants at Top of File
+## Usage
 
-- PIXEL_DIFF_THRESH = 0.1 - Threshold for detecting motion (0-1 range, 0.1 = 10% difference)
-- FRAME_SKIP = 60 - Process every 60th frame to reduce computational load
-- CAMERA_ID = 1 - Which camera to use (0 = built-in webcam, 1 = external camera)
+The system can be run in two modes:
+
+### 1. Motion Detection Pipeline
+
+Run the motion detection and object recognition:
+
+```bash
+python main.py
+```
+
+This will:
+
+- Initialize the camera
+- Start motion detection
+- Save detected motion images to `motion_detected/`
+- Run object detection on motion events
+- Save detection results to `detections/`
+
+### 2. Battlefield Visualization Demo
+
+Run the visualization interface:
+
+```bash
+python server/battlefield_ui.py
+```
+
+This will:
+
+- Display the floor plan with detection nodes
+- Show real-time detection updates (assuming cameras are connected)
+- Visualize detected objects and their locations
+- Provide an interactive interface for monitoring
+
+### Visualization Controls
+
+- Click on a node to show/hide its detection information
+- Click the "Hide/Show Messages" button to toggle detection message history
+- Press 'q' to quit the visualization
+
+## Configuration
+
+- `server/nodes.json`: Configure node positions and descriptions
+- `main.py`: Adjust motion detection parameters (CAMERA_ID, PIXEL_DIFF_THRESH, INITIAL_FRAME_SKIP, etc.)
+- `server/detection.py`: Modify object detection settings (confidence threshold, allowed classes)
+
+## Requirements
+
+- Python 3.8+
+- OpenCV
+- PyTorch
+- Ultralytics (YOLOv8)
+- Pygame
+- Additional dependencies in requirements.txt
+
+## Notes
+
+- The system requires a camera for motion detection (configurable in main.py: CAMERA_ID). Set 0 for the build-in laptop webcam and 1 for the external camera (e.g. Logitech)
+- Detection results are stored in JSON format for easy integration
+- The visualization demo supports real-time updates from multiple detection nodes
