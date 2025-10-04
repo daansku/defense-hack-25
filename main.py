@@ -205,7 +205,7 @@ def save_frame(frame, bbox=None, output_dir="captured_images", is_visualization=
     prefix = "viz_" if is_visualization else "capture_"
     
     if bbox is not None and not is_visualization:
-        compressed = crop_and_compress(frame, bbox)
+        compressed = crop_to_grayscale(frame, bbox)
         if compressed is not None:
             frame = compressed
             
