@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-10-04T14:28:44.096101",
+  "image_path": "test_images/test3.jpg",
+  "total_detections": 2,
+  "object_counts": {
+    "airplane": 2
+  },
+  "detections": [
+    {
+      "class_name": "airplane",
+      "confidence": 0.721462607383728
+    },
+    {
+      "class_name": "airplane",
+      "confidence": 0.512468159198761
+    }
+  ]
+}
