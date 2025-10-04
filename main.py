@@ -7,9 +7,9 @@ import os
 import logging
 from server.detection import get_latest_image, detect_objects
 
-PIXEL_DIFF_THRESH = 0.1   # Threshold for pixel difference (0-1 range)
+PIXEL_DIFF_THRESH = 0.3   # Threshold for pixel difference (0-1 range)
 INITIAL_FRAME_SKIP = 30
-CAMERA_ID = 0
+CAMERA_ID = 1
 KEEP_PREV_MOTION_PICS = False
 KEEP_PREV_CAPTURE_PICS = False
 COMPRESS_QUALITY = 30  
@@ -357,7 +357,6 @@ def img_to_bytestr(path) -> bytes:
 def main():
     try:
         # Create output directories
-        Path("captured_images/").mkdir(exist_ok=True)
         Path("motion_detected/").mkdir(exist_ok=True)
         logging.info("Starting motion detection")
         
