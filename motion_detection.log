@@ -1,0 +1,172 @@
+2025-10-04 21:15:48,533 - INFO - Starting motion detection
+2025-10-04 21:15:48,534 - INFO - Deleted 0 images from motion_detected
+2025-10-04 21:15:48,535 - WARNING - Folder captured_images does not exist
+2025-10-04 21:15:48,535 - ERROR - Folder captured_images does not exist
+2025-10-04 21:15:48,535 - INFO - No motion detected or insufficient images. Starting camera capture...
+2025-10-04 21:15:57,838 - INFO - Camera initialized successfully
+2025-10-04 21:15:58,917 - INFO - Changed pixels: 4317
+2025-10-04 21:15:58,922 - INFO - Found 5387 motion pixels
+2025-10-04 21:15:58,922 - INFO - Raw bbox before padding: x=[191, 488], y=[228, 479]
+2025-10-04 21:15:58,923 - INFO - Image shape: (480, 640)
+2025-10-04 21:15:58,923 - INFO - Final bbox after padding: x=[181, 498], y=[218, 479]
+2025-10-04 21:15:58,971 - INFO - Saved cropped image: motion_detected\cropped_20251004_211558_963356.jpg (size: (261, 317))
+2025-10-04 21:15:59,205 - INFO - Changed pixels: 5047
+2025-10-04 21:15:59,207 - INFO - Found 5837 motion pixels
+2025-10-04 21:15:59,207 - INFO - Raw bbox before padding: x=[190, 488], y=[241, 479]
+2025-10-04 21:15:59,208 - INFO - Image shape: (480, 640)
+2025-10-04 21:15:59,208 - INFO - Final bbox after padding: x=[180, 498], y=[231, 479]
+2025-10-04 21:15:59,210 - INFO - Saved cropped image: motion_detected\cropped_20251004_211559_210046.jpg (size: (248, 318))
+2025-10-04 21:15:59,529 - INFO - Changed pixels: 2518
+2025-10-04 21:15:59,531 - INFO - Found 3221 motion pixels
+2025-10-04 21:15:59,531 - INFO - Raw bbox before padding: x=[341, 447], y=[237, 403]
+2025-10-04 21:15:59,531 - INFO - Image shape: (480, 640)
+2025-10-04 21:15:59,531 - INFO - Final bbox after padding: x=[331, 457], y=[227, 413]
+2025-10-04 21:15:59,534 - INFO - Saved cropped image: motion_detected\cropped_20251004_211559_533804.jpg (size: (186, 126))
+2025-10-04 21:15:59,859 - INFO - Changed pixels: 5223
+2025-10-04 21:15:59,861 - INFO - Found 6350 motion pixels
+2025-10-04 21:15:59,861 - INFO - Raw bbox before padding: x=[222, 433], y=[241, 403]
+2025-10-04 21:15:59,861 - INFO - Image shape: (480, 640)
+2025-10-04 21:15:59,861 - INFO - Final bbox after padding: x=[212, 443], y=[231, 413]
+2025-10-04 21:15:59,865 - INFO - Saved cropped image: motion_detected\cropped_20251004_211559_863977.jpg (size: (182, 231))
+2025-10-04 21:16:00,186 - INFO - Changed pixels: 1274
+2025-10-04 21:16:00,188 - INFO - Found 1745 motion pixels
+2025-10-04 21:16:00,189 - INFO - Raw bbox before padding: x=[324, 411], y=[262, 406]
+2025-10-04 21:16:00,189 - INFO - Image shape: (480, 640)
+2025-10-04 21:16:00,189 - INFO - Final bbox after padding: x=[314, 421], y=[252, 416]
+2025-10-04 21:16:00,193 - INFO - Saved cropped image: motion_detected\cropped_20251004_211600_191989.jpg (size: (164, 107))
+2025-10-04 21:16:00,495 - INFO - Changed pixels: 251
+2025-10-04 21:16:00,497 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:16:00,826 - INFO - Changed pixels: 1248
+2025-10-04 21:16:00,827 - INFO - Found 1512 motion pixels
+2025-10-04 21:16:00,828 - INFO - Raw bbox before padding: x=[238, 401], y=[286, 341]
+2025-10-04 21:16:00,828 - INFO - Image shape: (480, 640)
+2025-10-04 21:16:00,828 - INFO - Final bbox after padding: x=[228, 411], y=[276, 351]
+2025-10-04 21:16:00,830 - INFO - Saved cropped image: motion_detected\cropped_20251004_211600_829474.jpg (size: (75, 183))
+2025-10-04 21:26:07,165 - INFO - Starting motion detection
+2025-10-04 21:26:07,165 - INFO - Deleted 0 images from motion_detected
+2025-10-04 21:26:07,165 - WARNING - Folder captured_images does not exist
+2025-10-04 21:26:07,165 - ERROR - Folder captured_images does not exist
+2025-10-04 21:26:07,165 - INFO - No motion detected or insufficient images. Starting camera capture...
+2025-10-04 21:26:15,970 - INFO - Camera initialized successfully
+2025-10-04 21:26:16,964 - INFO - Changed pixels: 40669
+2025-10-04 21:26:16,964 - INFO - Found 48235 motion pixels
+2025-10-04 21:26:16,964 - INFO - Raw bbox before padding: x=[0, 607], y=[60, 479]
+2025-10-04 21:26:16,973 - INFO - Image shape: (480, 640)
+2025-10-04 21:26:16,973 - INFO - Final bbox after padding: x=[0, 617], y=[50, 479]
+2025-10-04 21:26:17,001 - INFO - Saved cropped image: motion_detected\cropped_20251004_212616_999677.jpg (size: (429, 617))
+2025-10-04 21:26:17,247 - INFO - Changed pixels: 6049
+2025-10-04 21:26:17,249 - INFO - Found 7326 motion pixels
+2025-10-04 21:26:17,249 - INFO - Raw bbox before padding: x=[255, 538], y=[255, 476]
+2025-10-04 21:26:17,249 - INFO - Image shape: (480, 640)
+2025-10-04 21:26:17,249 - INFO - Final bbox after padding: x=[245, 548], y=[245, 479]
+2025-10-04 21:26:17,255 - INFO - Saved cropped image: motion_detected\cropped_20251004_212617_253084.jpg (size: (234, 303))
+2025-10-04 21:26:17,531 - INFO - Changed pixels: 309
+2025-10-04 21:26:17,531 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:17,754 - INFO - Changed pixels: 132
+2025-10-04 21:26:17,756 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:17,997 - INFO - Changed pixels: 2148
+2025-10-04 21:26:17,997 - INFO - Found 2299 motion pixels
+2025-10-04 21:26:17,997 - INFO - Raw bbox before padding: x=[220, 470], y=[352, 479]
+2025-10-04 21:26:17,997 - INFO - Image shape: (480, 640)
+2025-10-04 21:26:17,997 - INFO - Final bbox after padding: x=[210, 480], y=[342, 479]
+2025-10-04 21:26:18,001 - INFO - Saved cropped image: motion_detected\cropped_20251004_212617_997104.jpg (size: (137, 270))
+2025-10-04 21:26:18,230 - INFO - Changed pixels: 107
+2025-10-04 21:26:18,232 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:18,447 - INFO - Changed pixels: 10
+2025-10-04 21:26:18,447 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:18,651 - INFO - Changed pixels: 2235
+2025-10-04 21:26:18,653 - INFO - Found 2762 motion pixels
+2025-10-04 21:26:18,653 - INFO - Raw bbox before padding: x=[249, 443], y=[338, 479]
+2025-10-04 21:26:18,654 - INFO - Image shape: (480, 640)
+2025-10-04 21:26:18,654 - INFO - Final bbox after padding: x=[239, 453], y=[328, 479]
+2025-10-04 21:26:18,655 - INFO - Saved cropped image: motion_detected\cropped_20251004_212618_655001.jpg (size: (151, 214))
+2025-10-04 21:26:18,915 - INFO - Changed pixels: 2068
+2025-10-04 21:26:18,916 - INFO - Found 2263 motion pixels
+2025-10-04 21:26:18,916 - INFO - Raw bbox before padding: x=[247, 439], y=[321, 462]
+2025-10-04 21:26:18,916 - INFO - Image shape: (480, 640)
+2025-10-04 21:26:18,916 - INFO - Final bbox after padding: x=[237, 449], y=[311, 472]
+2025-10-04 21:26:18,916 - INFO - Saved cropped image: motion_detected\cropped_20251004_212618_916060.jpg (size: (161, 212))
+2025-10-04 21:26:19,162 - INFO - Changed pixels: 360
+2025-10-04 21:26:19,162 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:19,358 - INFO - Changed pixels: 21
+2025-10-04 21:26:19,359 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:19,629 - INFO - Changed pixels: 25
+2025-10-04 21:26:19,629 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:20,068 - INFO - Changed pixels: 39
+2025-10-04 21:26:20,070 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:20,303 - INFO - Changed pixels: 1
+2025-10-04 21:26:20,306 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:20,791 - INFO - Changed pixels: 11
+2025-10-04 21:26:20,793 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:21,046 - INFO - Changed pixels: 1
+2025-10-04 21:26:21,048 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:21,293 - INFO - Changed pixels: 1
+2025-10-04 21:26:21,296 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:21,549 - INFO - Changed pixels: 238
+2025-10-04 21:26:21,551 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:26:21,835 - INFO - Changed pixels: 4866
+2025-10-04 21:26:21,836 - INFO - Found 5992 motion pixels
+2025-10-04 21:26:21,837 - INFO - Raw bbox before padding: x=[257, 448], y=[318, 479]
+2025-10-04 21:26:21,837 - INFO - Image shape: (480, 640)
+2025-10-04 21:26:21,837 - INFO - Final bbox after padding: x=[247, 458], y=[308, 479]
+2025-10-04 21:26:21,841 - INFO - Saved cropped image: motion_detected\cropped_20251004_212621_839191.jpg (size: (171, 211))
+2025-10-04 21:31:18,203 - INFO - Starting motion detection
+2025-10-04 21:31:18,205 - INFO - Deleted 0 images from motion_detected
+2025-10-04 21:31:18,205 - WARNING - Folder captured_images does not exist
+2025-10-04 21:31:18,205 - ERROR - Folder captured_images does not exist
+2025-10-04 21:31:18,205 - INFO - No motion detected or insufficient images. Starting camera capture...
+2025-10-04 21:31:26,842 - INFO - Camera initialized successfully
+2025-10-04 21:31:27,825 - INFO - Changed pixels: 7574
+2025-10-04 21:31:27,825 - INFO - Found 9743 motion pixels
+2025-10-04 21:31:27,825 - INFO - Raw bbox before padding: x=[41, 551], y=[365, 479]
+2025-10-04 21:31:27,825 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:27,825 - INFO - Final bbox after padding: x=[31, 561], y=[355, 479]
+2025-10-04 21:31:28,076 - INFO - Changed pixels: 3901
+2025-10-04 21:31:28,079 - INFO - Found 4603 motion pixels
+2025-10-04 21:31:28,079 - INFO - Raw bbox before padding: x=[52, 607], y=[361, 479]
+2025-10-04 21:31:28,080 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:28,080 - INFO - Final bbox after padding: x=[42, 617], y=[351, 479]
+2025-10-04 21:31:28,321 - INFO - Changed pixels: 4011
+2025-10-04 21:31:28,323 - INFO - Found 3110 motion pixels
+2025-10-04 21:31:28,323 - INFO - Raw bbox before padding: x=[51, 639], y=[250, 450]
+2025-10-04 21:31:28,325 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:28,325 - INFO - Final bbox after padding: x=[41, 639], y=[240, 460]
+2025-10-04 21:31:28,539 - INFO - Changed pixels: 1211
+2025-10-04 21:31:28,539 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:28,807 - INFO - Changed pixels: 1748
+2025-10-04 21:31:28,807 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:29,065 - INFO - Changed pixels: 63
+2025-10-04 21:31:29,067 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:29,310 - INFO - Changed pixels: 97
+2025-10-04 21:31:29,311 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:29,591 - INFO - Changed pixels: 13
+2025-10-04 21:31:29,591 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:29,807 - INFO - Changed pixels: 3
+2025-10-04 21:31:29,807 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:30,026 - INFO - Changed pixels: 23
+2025-10-04 21:31:30,028 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:30,632 - INFO - Changed pixels: 10
+2025-10-04 21:31:30,632 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:30,868 - INFO - Changed pixels: 87
+2025-10-04 21:31:30,868 - WARNING - No non-zero pixels found in diff_map
+2025-10-04 21:31:31,111 - INFO - Changed pixels: 680
+2025-10-04 21:31:31,111 - INFO - Found 389 motion pixels
+2025-10-04 21:31:31,111 - INFO - Raw bbox before padding: x=[273, 398], y=[422, 469]
+2025-10-04 21:31:31,111 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:31,115 - INFO - Final bbox after padding: x=[263, 408], y=[412, 479]
+2025-10-04 21:31:31,355 - INFO - Changed pixels: 11699
+2025-10-04 21:31:31,356 - INFO - Found 14976 motion pixels
+2025-10-04 21:31:31,356 - INFO - Raw bbox before padding: x=[63, 639], y=[105, 479]
+2025-10-04 21:31:31,356 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:31,356 - INFO - Final bbox after padding: x=[53, 639], y=[95, 479]
+2025-10-04 21:31:31,555 - INFO - Changed pixels: 17087
+2025-10-04 21:31:31,555 - INFO - Found 21147 motion pixels
+2025-10-04 21:31:31,555 - INFO - Raw bbox before padding: x=[0, 547], y=[65, 479]
+2025-10-04 21:31:31,555 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:31,555 - INFO - Final bbox after padding: x=[0, 557], y=[55, 479]
+2025-10-04 21:31:31,569 - INFO - Changed pixels: 17087
+2025-10-04 21:31:31,569 - INFO - Found 21147 motion pixels
+2025-10-04 21:31:31,572 - INFO - Raw bbox before padding: x=[0, 547], y=[65, 479]
+2025-10-04 21:31:31,572 - INFO - Image shape: (480, 640)
+2025-10-04 21:31:31,573 - INFO - Final bbox after padding: x=[0, 557], y=[55, 479]
+2025-10-04 21:31:31,579 - INFO - Saved cropped image: motion_detected\cropped_20251004_213131_576661.jpg (size: (424, 557))

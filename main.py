@@ -406,11 +406,12 @@ def main():
                 
                 # Compare with previous frame if we have one
                 if 'prev_frame_rgb' in locals():
+                    # Only save crops on the last frame (when after_det_frames == MAX_AFTER_DET_FRAMES)
                     result, num_changed, bbox, diff_vis = detect_motion(
                         prev_frame_rgb, 
                         current_frame_rgb,
                         thresh=PIXEL_DIFF_THRESH,
-                        save_crop=True,
+                        save_crop=False,  # Don't save crops during motion tracking
                         original_frame=frame,
                         output_dir="motion_detected"
                     )
@@ -427,10 +428,19 @@ def main():
                         frame_with_box = frame.copy()
                         cv2.rectangle(frame_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
                         
-                        # Save the frame with bounding box
-                        save_frame(frame_with_box, output_dir="motion_detected")
-
+                        # Only save the frame if it's the last one
                         if after_det_frames == MAX_AFTER_DET_FRAMES:
+                            # Save both the frame with bounding box and the cropped version
+                            save_frame(frame_with_box, output_dir="motion_detected")
+                            # Save cropped version by calling detect_motion with save_crop=True
+                            detect_motion(
+                                prev_frame_rgb, 
+                                current_frame_rgb,
+                                thresh=PIXEL_DIFF_THRESH,
+                                save_crop=True,
+                                original_frame=frame,
+                                output_dir="motion_detected"
+                            )
                             detect_obj()
                             print(img_to_bytestr(get_latest_image("motion_detected")))
                             exit(0)

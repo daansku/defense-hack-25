@@ -5,7 +5,8 @@ import time
 import glob
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
+from collections import deque
 
 # Initialize Pygame
 pygame.init()
@@ -13,6 +14,7 @@ pygame.init()
 # Initialize font
 pygame.font.init()
 font = pygame.font.SysFont('JetBrains Mono', 16)
+node_id_font = pygame.font.SysFont('JetBrains Mono', 16)
 
 # Window dimensions
 WINDOW_WIDTH = 500
@@ -23,11 +25,33 @@ NODE_RADIUS = 8
 FLASH_DURATION = 1.0  # Duration of flash in seconds
 DETECTION_CHECK_INTERVAL = 1.0  # How often to check for detections (seconds)
 IMAGE_DISPLAY_SIZE = (200, 150)  # Size for the detection image thumbnail
+MAX_MESSAGES = 10  # Maximum number of messages to store
+BUTTON_HEIGHT = 30
+BUTTON_WIDTH = 120
+BUTTON_PADDING = 10
 
 # Colors
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
+DARK_GRAY = (50, 50, 50)
+LIGHT_GRAY = (100, 100, 100)
+
+class DetectionMessage:
+    def __init__(self, node_id: int, object_counts: Dict[str, int], timestamp: float):
+        self.node_id = node_id
+        self.object_counts = object_counts
+        self.timestamp = timestamp
+        
+    def get_message(self) -> str:
+        objects = []
+        for obj_type, count in self.object_counts.items():
+            if count == 1:
+                objects.append(f"1 {obj_type}")
+            else:
+                objects.append(f"{count} {obj_type}s")
+        object_text = ", ".join(objects)
+        return f"Object detected at Node {self.node_id}: {object_text}"
 
 # Node states
 class NodeState:
@@ -39,10 +63,43 @@ class NodeState:
         self.current_image_path = None
         self.current_detection_data = None
         self.show_detection_info = False
+        self.last_message_time = 0
+
+# Button class for message toggle
+class Button:
+    def __init__(self, x: int, y: int, width: int, height: int):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.is_messages_visible = True
+        
+    def draw(self, screen):
+        # Draw button background
+        color = LIGHT_GRAY if self.is_messages_visible else DARK_GRAY
+        pygame.draw.rect(screen, color, self.rect)
+        
+        # Draw button border
+        pygame.draw.rect(screen, WHITE, self.rect, 1)
+        
+        # Draw button text
+        text = font.render("Hide Messages" if self.is_messages_visible else "Show Messages", True, WHITE)
+        text_rect = text.get_rect(center=self.rect.center)
+        screen.blit(text, text_rect)
+    
+    def handle_click(self, pos: Tuple[int, int]) -> bool:
+        if self.rect.collidepoint(pos):
+            self.is_messages_visible = not self.is_messages_visible
+            return True
+        return False
 
 # Global variables
 node_states: Dict[int, NodeState] = {1: NodeState(), 2: NodeState(), 3: NodeState()}
 last_detection_check = 0
+detection_messages: deque = deque(maxlen=MAX_MESSAGES)
+message_button = Button(
+    BUTTON_PADDING,
+    WINDOW_HEIGHT - BUTTON_HEIGHT - BUTTON_PADDING,
+    BUTTON_WIDTH,
+    BUTTON_HEIGHT
+)
 
 def load_floormap():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -157,10 +214,22 @@ def check_active_detections():
         except (json.JSONDecodeError, FileNotFoundError):
             continue
     
+    current_time = time.time()
+    
     # Update node states with latest detections
     for node_id, latest in latest_detections.items():
         state = node_states[node_id]
         if latest['data']:
+            # Check if this is a new detection we haven't messaged about
+            if latest['time'] > state.last_message_time:
+                # Add new detection message
+                detection_messages.append(DetectionMessage(
+                    node_id=node_id,
+                    object_counts=latest['data']["object_counts"],
+                    timestamp=current_time
+                ))
+                state.last_message_time = latest['time']
+            
             state.active_detection = True
             state.current_detection_data = latest['data']
             # Load the associated image if it's different from the current one
@@ -169,7 +238,7 @@ def check_active_detections():
             if image_path != state.current_image_path:
                 state.current_image_path = image_path
                 state.current_detection_image = load_and_scale_image(image_path)
-                state.last_detection_time = time.time()
+                state.last_detection_time = current_time
                 state.is_flashing = True
         else:
             state.active_detection = False
@@ -234,6 +303,34 @@ def draw_detection_info(screen, image_pos, detection_data):
         screen.blit(count_text, (text_x, y_offset))
         y_offset += 20
 
+def draw_node_id(screen, node_pos: Tuple[int, int], node_id: int):
+    """Draw node ID in the bottom right of the node"""
+    # Create text surface for node ID
+    id_text = node_id_font.render(str(node_id), True, WHITE)
+    text_rect = id_text.get_rect()
+    
+    # Position text at bottom right of node
+    text_pos = (node_pos[0] + NODE_RADIUS, node_pos[1] + NODE_RADIUS)
+    screen.blit(id_text, text_pos)
+
+def draw_detection_messages(screen):
+    """Draw detection messages in bottom left corner"""
+    if not message_button.is_messages_visible:
+        message_button.draw(screen)
+        return
+        
+    # Draw all messages
+    y_offset = WINDOW_HEIGHT - BUTTON_HEIGHT - BUTTON_PADDING - 10  # Start above the button
+    for message in reversed(detection_messages):  # Show newest messages at the bottom
+        text = font.render(message.get_message(), True, RED)
+        text_rect = text.get_rect()
+        text_rect.bottomleft = (10, y_offset)
+        screen.blit(text, text_rect)
+        y_offset -= 25  # Move up for next message
+    
+    # Draw the toggle button
+    message_button.draw(screen)
+
 def draw_battlefield():
     """Draw the battlefield with room and nodes"""
     # Fill background with black
@@ -259,6 +356,9 @@ def draw_battlefield():
             node_color = get_node_color(node["id"])
             pygame.draw.circle(screen, node_color, node_pos, NODE_RADIUS)
             
+            # Draw node ID
+            draw_node_id(screen, node_pos, node["id"])
+            
             # Draw detection info if toggled on for this node
             state = node_states[node["id"]]
             if state.show_detection_info and state.current_detection_image:
@@ -276,6 +376,9 @@ def draw_battlefield():
                 
                 # Draw detection information
                 draw_detection_info(screen, (image_x, image_y), state.current_detection_data)
+    
+    # Draw detection messages
+    draw_detection_messages(screen)
 
 def main():
     # Set up the file system observer
@@ -292,6 +395,10 @@ def main():
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Left click
+                        # Check if message button was clicked
+                        if message_button.handle_click(event.pos):
+                            continue
+                            
                         # Check all monitored nodes for clicks
                         data = load_nodes()
                         for node in data["nodes"]:
