@@ -16,15 +16,21 @@ pygame.font.init()
 font = pygame.font.SysFont('JetBrains Mono', 16)
 node_id_font = pygame.font.SysFont('JetBrains Mono', 16)
 
-# Window dimensions
-WINDOW_WIDTH = 500
-WINDOW_HEIGHT = 800
+# Initial window dimensions
+INITIAL_WINDOW_WIDTH = 500
+INITIAL_WINDOW_HEIGHT = 800
 
-# Constants
-NODE_RADIUS = 8
+# Current window dimensions (will be updated when window is resized)
+window_width = INITIAL_WINDOW_WIDTH
+window_height = INITIAL_WINDOW_HEIGHT
+
+# Base scale for elements (will be adjusted based on window size)
+BASE_SCALE = min(INITIAL_WINDOW_WIDTH / 1000, INITIAL_WINDOW_HEIGHT / 1000)  # Reference size of 1000x1000
+NODE_RADIUS = int(12 * BASE_SCALE)
 FLASH_DURATION = 1.0  # Duration of flash in seconds
 DETECTION_CHECK_INTERVAL = 1.0  # How often to check for detections (seconds)
-IMAGE_DISPLAY_SIZE = (200, 150)  # Size for the detection image thumbnail
+MAX_IMAGE_WIDTH = 200  # Maximum width for the detection image thumbnail
+MAX_IMAGE_HEIGHT = 150  # Maximum height for the detection image thumbnail
 MAX_MESSAGES = 10  # Maximum number of messages to store
 BUTTON_HEIGHT = 30
 BUTTON_WIDTH = 120
@@ -51,7 +57,10 @@ class DetectionMessage:
             else:
                 objects.append(f"{count} {obj_type}s")
         object_text = ", ".join(objects)
-        return f"Object detected at Node {self.node_id}: {object_text}"
+        if object_text == "":
+            return f"Motion detected at Node {self.node_id}"
+        else:
+            return f"{object_text} detected at Node {self.node_id}"
 
 # Node states
 class NodeState:
@@ -94,21 +103,33 @@ class Button:
 node_states: Dict[int, NodeState] = {1: NodeState(), 2: NodeState(), 3: NodeState()}
 last_detection_check = 0
 detection_messages: deque = deque(maxlen=MAX_MESSAGES)
-message_button = Button(
-    BUTTON_PADDING,
-    WINDOW_HEIGHT - BUTTON_HEIGHT - BUTTON_PADDING,
-    BUTTON_WIDTH,
-    BUTTON_HEIGHT
-)
+# Button will be repositioned when window is resized
+def get_message_button():
+    return Button(
+        BUTTON_PADDING,
+        window_height - BUTTON_HEIGHT - BUTTON_PADDING,
+        BUTTON_WIDTH,
+        BUTTON_HEIGHT
+    )
 
-def load_floormap():
+message_button = get_message_button()
+
+def load_floormap(target_width=None, target_height=None):
+    """Load and scale the floormap to fit the current window size"""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     floormap_path = os.path.join(os.path.dirname(script_dir), "floormap.png")
+    
+    # Use current window dimensions if not specified
+    if target_width is None:
+        target_width = window_width
+    if target_height is None:
+        target_height = window_height
+        
     try:
         original_map = pygame.image.load(floormap_path)
         # Calculate scaling factors for both dimensions
-        scale_x = WINDOW_WIDTH / original_map.get_width()
-        scale_y = WINDOW_HEIGHT / original_map.get_height()
+        scale_x = target_width / original_map.get_width()
+        scale_y = target_height / original_map.get_height()
         # Use the smaller scaling factor to maintain aspect ratio
         scale = min(scale_x, scale_y)
         
@@ -120,12 +141,12 @@ def load_floormap():
         scaled_map = pygame.transform.scale(original_map, (new_width, new_height))
         
         # Create a black surface the size of the window
-        final_surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
+        final_surface = pygame.Surface((target_width, target_height))
         final_surface.fill((0, 0, 0))
         
         # Calculate position to center the image
-        x_offset = (WINDOW_WIDTH - new_width) // 2
-        y_offset = (WINDOW_HEIGHT - new_height) // 2
+        x_offset = (target_width - new_width) // 2
+        y_offset = (target_height - new_height) // 2
         
         # Blit the scaled image onto the surface
         final_surface.blit(scaled_map, (x_offset, y_offset))
@@ -133,7 +154,8 @@ def load_floormap():
         return {
             'surface': final_surface,
             'scale': scale,
-            'offset': (x_offset, y_offset)
+            'offset': (x_offset, y_offset),
+            'original_map': original_map  # Keep original for rescaling
         }
     except (pygame.error, FileNotFoundError) as e:
         print(f"Error loading floormap: {e}")
@@ -142,8 +164,8 @@ def load_floormap():
 # Load floormap and get scaling information
 FLOORMAP_DATA = load_floormap()
 
-# Create the window
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+# Create a resizable window
+screen = pygame.display.set_mode((INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("Battlefield UI")
 
 class MotionDetectionHandler(FileSystemEventHandler):
@@ -167,10 +189,26 @@ def setup_motion_detection_observer():
     return observer
 
 def load_and_scale_image(image_path):
-    """Load and scale an image to the display size"""
+    """Load and scale an image while maintaining aspect ratio"""
     try:
         image = pygame.image.load(image_path)
-        return pygame.transform.scale(image, IMAGE_DISPLAY_SIZE)
+        
+        # Get original dimensions
+        orig_width = image.get_width()
+        orig_height = image.get_height()
+        
+        # Calculate scaling factors for both dimensions
+        scale_w = MAX_IMAGE_WIDTH / orig_width
+        scale_h = MAX_IMAGE_HEIGHT / orig_height
+        
+        # Use the smaller scaling factor to maintain aspect ratio
+        scale = min(scale_w, scale_h)
+        
+        # Calculate new dimensions
+        new_width = int(orig_width * scale)
+        new_height = int(orig_height * scale)
+        
+        return pygame.transform.scale(image, (new_width, new_height))
     except (pygame.error, FileNotFoundError):
         return None
 
@@ -282,14 +320,14 @@ def is_point_in_circle(point: Tuple[int, int], center: Tuple[int, int], radius: 
     """Check if a point is inside a circle"""
     return (point[0] - center[0]) ** 2 + (point[1] - center[1]) ** 2 <= radius ** 2
 
-def draw_detection_info(screen, image_pos, detection_data):
+def draw_detection_info(screen, image_pos, detection_data, image=None):
     """Draw detection information below the image"""
-    if not detection_data:
+    if not detection_data or not image:
         return
 
     # Position for the text (below the image)
     text_x = image_pos[0]
-    text_y = image_pos[1] + IMAGE_DISPLAY_SIZE[1] + 5
+    text_y = image_pos[1] + image.get_height() + 5
 
     # Create text surfaces for object counts
     object_counts = detection_data.get("object_counts", {})
@@ -320,7 +358,7 @@ def draw_detection_messages(screen):
         return
         
     # Draw all messages
-    y_offset = WINDOW_HEIGHT - BUTTON_HEIGHT - BUTTON_PADDING - 10  # Start above the button
+    y_offset = window_height - BUTTON_HEIGHT - BUTTON_PADDING - 10  # Start above the button
     for message in reversed(detection_messages):  # Show newest messages at the bottom
         text = font.render(message.get_message(), True, RED)
         text_rect = text.get_rect()
@@ -364,28 +402,44 @@ def draw_battlefield():
             if state.show_detection_info and state.current_detection_image:
                 # Position the image to the right of the node
                 image_x = node_pos[0] + NODE_RADIUS + 10
-                image_y = node_pos[1] - IMAGE_DISPLAY_SIZE[1] // 2
+                image_height = state.current_detection_image.get_height()
+                image_y = node_pos[1] - image_height // 2
                 
                 # Draw a white border around the image
                 border_rect = pygame.Rect(image_x - 2, image_y - 2,
-                                        IMAGE_DISPLAY_SIZE[0] + 4, IMAGE_DISPLAY_SIZE[1] + 4)
+                                        state.current_detection_image.get_width() + 4, 
+                                        image_height + 4)
                 pygame.draw.rect(screen, WHITE, border_rect)
                 
                 # Draw the image
                 screen.blit(state.current_detection_image, (image_x, image_y))
                 
                 # Draw detection information
-                draw_detection_info(screen, (image_x, image_y), state.current_detection_data)
+                draw_detection_info(screen, (image_x, image_y), state.current_detection_data, state.current_detection_image)
     
     # Draw detection messages
     draw_detection_messages(screen)
 
+def is_hovering_over_active_node(mouse_pos, nodes_data):
+    """Check if mouse is hovering over a flashing or active node"""
+    for node in nodes_data["nodes"]:
+        if node["id"] in node_states:
+            node_pos = scale_coordinates(node["coordinates"]["x"], node["coordinates"]["y"])
+            state = node_states[node["id"]]
+            if is_point_in_circle(mouse_pos, node_pos, NODE_RADIUS) and (state.is_flashing or state.active_detection):
+                return True
+    return False
+
 def main():
+    global window_width, window_height, FLOORMAP_DATA, NODE_RADIUS, BASE_SCALE
+    
     # Set up the file system observer
     observer = setup_motion_detection_observer()
     
     running = True
     clock = pygame.time.Clock()
+    default_cursor = pygame.SYSTEM_CURSOR_ARROW
+    pointer_cursor = pygame.SYSTEM_CURSOR_HAND
     
     try:
         while running:
@@ -393,6 +447,25 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    # Update window dimensions
+                    window_width = event.w
+                    window_height = event.h
+                    
+                    # Update the screen
+                    screen = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE)
+                    
+                    # Recalculate base scale
+                    BASE_SCALE = min(window_width / 1000, window_height / 1000)
+                    NODE_RADIUS = int(8 * BASE_SCALE)
+                    
+                    # Reload and rescale the floormap
+                    FLOORMAP_DATA = load_floormap(window_width, window_height)
+                    
+                    # Update button position
+                    global message_button
+                    message_button = get_message_button()
+                    
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:  # Left click
                         # Check if message button was clicked
@@ -413,6 +486,14 @@ def main():
             
             # Draw everything
             draw_battlefield()
+            
+            # Check for node hover and update cursor
+            mouse_pos = pygame.mouse.get_pos()
+            nodes_data = load_nodes()
+            if is_hovering_over_active_node(mouse_pos, nodes_data):
+                pygame.mouse.set_cursor(pointer_cursor)
+            else:
+                pygame.mouse.set_cursor(default_cursor)
             
             # Update display
             pygame.display.flip()
