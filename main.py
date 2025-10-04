@@ -13,6 +13,8 @@ CAMERA_ID = 0
 KEEP_PREV_MOTION_PICS = False
 KEEP_PREV_CAPTURE_PICS = False
 COMPRESS_QUALITY = 30  
+MAX_AFTER_DET_FRAMES = 5  # Number of frames to process after detection
+AFTER_DET_RATE = 20
 
 # Set up logging
 logging.basicConfig(
@@ -343,6 +345,12 @@ def detect_obj():
         print(f"{obj}: {count}")
 
 
+def img_to_bytestr(img) -> str:
+    """Convert image to byte string"""
+    path = get_latest_image("motion_detected")
+    return cv2.imread(str(path), cv2.COLOR_BGR2GRAY).tobytes()
+
+
 def main():
     try:
         # Create output directories
@@ -369,21 +377,26 @@ def main():
             return
             
         logging.info("Camera initialized successfully")
-        
         frame_idx = 0
-
+        after_det_frames = 0 
+        FRAME_SKIP = INITIAL_FRAME_SKIP
+        
         while True:
-            ret, frame = cam.read()
-            
-            if not ret:
-                print("Error: Failed to capture frame")
-                break
-
-            # Display the current frame
-            cv2.imshow("Motion Detection", frame)
-
             # Process every Nth frame
             if frame_idx % FRAME_SKIP == 0:
+
+                if after_det_frames > MAX_AFTER_DET_FRAMES:
+                    FRAME_SKIP = INITIAL_FRAME_SKIP
+                    after_det_frames = 0
+
+                ret, frame = cam.read()
+
+                if not ret:
+                    print("Error: Failed to capture frame")
+                    break
+
+                cv2.imshow("Motion Detection", frame)
+
                 # Convert current frame to 0-1 range (keep RGB/BGR)
                 current_frame_rgb = frame.astype(np.float32) / 255.0
                 
@@ -412,8 +425,17 @@ def main():
                         
                         # Save the frame with bounding box
                         save_frame(frame_with_box, output_dir="motion_detected")
-                        detect_obj()
-                        exit(0)
+
+                        if after_det_frames == MAX_AFTER_DET_FRAMES:
+                            detect_obj()
+                            print(img_to_bytestr(get_latest_image("motion_detected")))
+                            exit(0)
+
+                        if FRAME_SKIP == INITIAL_FRAME_SKIP:
+                            FRAME_SKIP = AFTER_DET_RATE
+
+                        if FRAME_SKIP == AFTER_DET_RATE:
+                            after_det_frames += 1
                 
                 # Update previous frame
                 prev_frame_rgb = current_frame_rgb.copy()
