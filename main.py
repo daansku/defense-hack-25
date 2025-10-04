@@ -8,7 +8,10 @@ import logging
 
 PIXEL_DIFF_THRESH = 0.1   # Threshold for pixel difference (0-1 range)
 FRAME_SKIP = 60            # Process every Nth frame
-CAMERA_ID = 1
+CAMERA_ID = 0
+KEEP_PREV_MOTION_PICS = False
+KEEP_PREV_CAPTURE_PICS = False
+COMPRESS_QUALITY = 30  
 
 # Set up logging
 logging.basicConfig(
@@ -74,13 +77,20 @@ def find_bounding_box(diff_map: np.ndarray, min_size=20):
     return (x1, y1, x2, y2)
 
 
+def visualize_binary(diff_map: np.ndarray) -> None:
+    """Visualize binary difference map"""
+    vis = (diff_map * 255).astype(np.uint8)
+    vis = cv2.applyColorMap(vis, cv2.COLORMAP_BONE)
+    cv2.imshow("Binary Difference Map", vis)
+
+
 def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=False, 
                   original_frame=None, output_dir="motion_detected"):
     """
-    Detect motion by comparing pixel differences between two grayscale images
+    Detect motion by comparing pixel differences between two RGB/BGR images
     
     Args:
-        image1, image2: np.ndarray of shape (H, W) with pixel values in [0, 1] (grayscale)
+        image1, image2: np.ndarray of shape (H, W, 3) with pixel values in [0, 1] (RGB/BGR)
         thresh: threshold for pixel difference detection
         save_crop: whether to save the cropped bounding box image
         original_frame: original color frame (BGR) to crop from, if None uses image2
@@ -89,11 +99,14 @@ def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=
     Returns:
         tuple: (image2 if motion detected else None, num_changed_pixels, bounding box or None, diff_visualization)
     """
-    # Calculate absolute difference
+    # Calculate absolute difference per channel
     diff = np.abs(image1 - image2)
     
+    # Average across color channels to get single difference value per pixel
+    diff_avg = np.mean(diff, axis=2)
+    
     # Apply Gaussian blur to reduce noise
-    diff_blurred = cv2.GaussianBlur(diff, (5, 5), 0)
+    diff_blurred = cv2.GaussianBlur(diff_avg, (5, 5), 0)
     
     # Create binary difference map where pixels exceed threshold
     diff_map = (diff_blurred > thresh).astype(np.uint8)
@@ -116,22 +129,24 @@ def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=
         
         # Find bounding box
         bbox = find_bounding_box(diff_map)
+
+        visualize_binary(diff_map)
         
         # Draw the binary mask on the visualization
         diff_vis = cv2.addWeighted(diff_vis, 0.7, cv2.cvtColor(diff_map * 255, cv2.COLOR_GRAY2BGR), 0.3, 0)
         
         # Save cropped image if requested and bbox is valid
         if save_crop and bbox is not None:
-            x1, y1, x2, y2 = bbox
             
             # Determine which frame to crop from
             if original_frame is not None:
                 frame_to_crop = original_frame
             else:
+                # Convert back to 0-255 range for saving
                 frame_to_crop = (image2 * 255).astype(np.uint8)
             
             # Crop the bounding box
-            cropped = frame_to_crop[y1:y2+1, x1:x2+1]
+            cropped = crop_to_grayscale(frame_to_crop, bbox)
             
             # Save the cropped image
             Path(output_dir).mkdir(exist_ok=True)
@@ -145,50 +160,41 @@ def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=
     return None, num_changed_pixels, None, diff_vis
 
 
-def crop_and_compress(frame: np.ndarray, bbox, quality=30) -> np.ndarray:
+def convert_to_greyscale(image_path: str) -> np.ndarray:
     """
-    Crop frame to bounding box and compress
+    Converts an RGB image to greyscale
     
     Args:
-        frame: Full frame
-        bbox: Tuple (x1, y1, x2, y2)
-        quality: JPEG compression quality (0-100)
+        image_path: path to the image file
         
     Returns:
-        Compressed cropped frame
+        np.ndarray of shape (H, W) with pixel values in [0, 1] (grayscale)
     """
-    try:
-        if bbox is None:
-            return None
-            
-        x1, y1, x2, y2 = bbox
-        
-        # Validate bbox coordinates
-        if not all(isinstance(x, (int, np.integer)) for x in [x1, y1, x2, y2]):
-            logging.error("Invalid bbox coordinates type")
-            return None
-            
-        if x1 < 0 or y1 < 0 or x2 >= frame.shape[1] or y2 >= frame.shape[0]:
-            logging.error("Bbox coordinates out of bounds")
-            return None
-            
-        cropped = frame[y1:y2, x1:x2]
-        
-        # Compress using JPEG
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
-        _, compressed = cv2.imencode('.jpg', cropped, encode_param)
-        decompressed = cv2.imdecode(compressed, cv2.IMREAD_COLOR)
-        
-        if decompressed is None:
-            logging.error("Failed to compress/decompress image")
-            return None
-            
-        logging.info(f"Cropped and compressed image from {frame.shape} to {decompressed.shape}")
-        return decompressed
-        
-    except Exception as e:
-        logging.error(f"Error in crop_and_compress: {str(e)}")
+    img = Image.open(image_path)
+    gray = img.convert('L')
+    arr = np.array(gray) / 255.0
+    return arr
+
+
+def crop_to_grayscale(frame: np.ndarray, bbox) -> np.ndarray:
+    """Crop frame to bounding box and convert to grayscale"""
+    if bbox is None:
         return None
+        
+    x1, y1, x2, y2 = bbox
+    
+    # Validate and crop
+    if x1 < 0 or y1 < 0 or x2 >= frame.shape[1] or y2 >= frame.shape[0]:
+        logging.error("Bbox coordinates out of bounds")
+        return None
+        
+    cropped = frame[y1:y2, x1:x2]
+    
+    # Convert to grayscale if needed
+    if len(cropped.shape) == 3:
+        cropped = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    
+    return cropped
 
 
 def save_frame(frame, bbox=None, output_dir="captured_images", is_visualization=False) -> str:
@@ -204,7 +210,11 @@ def save_frame(frame, bbox=None, output_dir="captured_images", is_visualization=
             frame = compressed
             
     filename = os.path.join(output_dir, f'{prefix}{timestamp}.jpg')
-    cv2.imwrite(filename, frame)
+    if len(frame.shape) == 3:  # Grayscale
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite(filename, gray_frame)
+    else:
+        cv2.imwrite(filename, frame)
     print(f"Image saved: {filename}")
     return filename
 
@@ -280,14 +290,14 @@ def process_folder_images(folder_path="captured_images"):
         logging.error("Failed to load images")
         return None
     
-    # Convert to grayscale (0-1 range)
-    background_gray = cv2.cvtColor(background_frame, cv2.COLOR_BGR2GRAY) / 255.0
-    newest_gray = cv2.cvtColor(newest_frame, cv2.COLOR_BGR2GRAY) / 255.0
+    # Convert to 0-1 range (keep RGB/BGR)
+    background_rgb = background_frame.astype(np.float32) / 255.0
+    newest_rgb = newest_frame.astype(np.float32) / 255.0
     
     # Detect motion using pixel difference
     result, num_changed, bbox, diff_vis = detect_motion(
-        background_gray, 
-        newest_gray,
+        background_rgb, 
+        newest_rgb,
         thresh=PIXEL_DIFF_THRESH,
         save_crop=True, 
         original_frame=newest_frame,
@@ -307,7 +317,7 @@ def process_folder_images(folder_path="captured_images"):
         save_frame(frame_with_box, output_dir="motion_detected")
         save_frame(diff_vis, output_dir="motion_detected", is_visualization=True)
         
-        return background_gray, newest_frame, newest_gray, bbox
+        return background_rgb, newest_frame, newest_rgb, bbox
     else:
         logging.info(f"No significant motion detected. Changed pixels: {num_changed}")
         return None
@@ -320,10 +330,11 @@ def main():
         Path("motion_detected/").mkdir(exist_ok=True)
         logging.info("Starting motion detection")
         
-        # Uncomment to clear folders on startup
-        delete_all_images("captured_images")
-        delete_all_images("motion_detected")
-        
+        if not KEEP_PREV_MOTION_PICS:
+            delete_all_images("motion_detected")
+        if not KEEP_PREV_CAPTURE_PICS:
+            delete_all_images("captured_images")
+
         # Process existing images in folder
         result = process_folder_images("captured_images")
         
@@ -353,14 +364,14 @@ def main():
 
             # Process every Nth frame
             if frame_idx % FRAME_SKIP == 0:
-                # Convert current frame to grayscale
-                current_frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) / 255.0
+                # Convert current frame to 0-1 range (keep RGB/BGR)
+                current_frame_rgb = frame.astype(np.float32) / 255.0
                 
                 # Compare with previous frame if we have one
-                if 'prev_frame_gray' in locals():
+                if 'prev_frame_rgb' in locals():
                     result, num_changed, bbox, diff_vis = detect_motion(
-                        prev_frame_gray, 
-                        current_frame_gray,
+                        prev_frame_rgb, 
+                        current_frame_rgb,
                         thresh=PIXEL_DIFF_THRESH,
                         save_crop=True,
                         original_frame=frame,
@@ -383,7 +394,7 @@ def main():
                         save_frame(frame_with_box, output_dir="motion_detected")
                 
                 # Update previous frame
-                prev_frame_gray = current_frame_gray.copy()
+                prev_frame_rgb = current_frame_rgb.copy()
 
             frame_idx += 1
             
