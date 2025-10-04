@@ -8,7 +8,7 @@ import logging
 
 PIXEL_DIFF_THRESH = 0.1   # Threshold for pixel difference (0-1 range)
 FRAME_SKIP = 60            # Process every Nth frame
-CAMERA_ID = 1
+CAMERA_ID = 0
 
 # Set up logging
 logging.basicConfig(

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-10-04T15:09:38.247491",
+  "image_path": "motion_detected\\capture_20251004_150923_059108.jpg",
+  "total_detections": 1,
+  "object_counts": {
+    "person": 1
+  },
+  "detections": [
+    {
+      "class_name": "person",
+      "confidence": 0.9230296611785889
+    }
+  ]
+}

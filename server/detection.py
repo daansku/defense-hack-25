@@ -1,12 +1,41 @@
 # Outputs the detections from the images to /detections folder
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
+
+def get_latest_image(directory: Union[str, Path]) -> Optional[Path]:
+    """
+    Get the path of the most recently added image file in the specified directory.
+    
+    Args:
+        directory: Path to the directory to search in
+        
+    Returns:
+        Path to the latest image file or None if no images found
+    """
+    directory = Path(directory)
+    if not directory.exists():
+        print(f"Directory {directory} does not exist")
+        return None
+        
+    # List all files and get their creation times
+    files = []
+    for ext in ['.jpg', '.jpeg', '.png', '.webp']:
+        files.extend(directory.glob(f'*{ext}'))
+    
+    if not files:
+        print(f"No image files found in {directory}")
+        return None
+        
+    # Get the most recent file
+    latest_file = max(files, key=lambda x: x.stat().st_mtime)
+    return latest_file
 
 def format_detection_for_json(box, class_name: str) -> Dict:
     """Format a single detection box into a JSON-compatible dictionary."""
@@ -76,8 +105,16 @@ def detect_objects(image_path: str, save_json: bool = True, output_dir: Optional
     return output
 
 if __name__ == "__main__":
-    img_path = "test_images/test.jpg"
-    results = detect_objects(img_path)
+    # Get the latest image from motion_detected folder
+    motion_dir = Path("motion_detected")
+    latest_image = get_latest_image(motion_dir)
+    
+    if latest_image is None:
+        print("No images found to process")
+        exit(1)
+        
+    print(f"Processing latest image: {latest_image}")
+    results = detect_objects(str(latest_image))
     
     # Print summary
     print("\nDetection Summary:")
