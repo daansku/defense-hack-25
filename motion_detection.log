@@ -1,0 +1,67 @@
+2025-10-04 11:39:40,290 - INFO - Starting motion detection
+2025-10-04 11:39:48,444 - INFO - Camera initialized successfully
+2025-10-04 11:39:58,358 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:41:04,548 - INFO - Starting motion detection
+2025-10-04 11:41:12,667 - INFO - Camera initialized successfully
+2025-10-04 11:41:13,344 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:41:18,589 - INFO - Starting motion detection
+2025-10-04 11:41:26,904 - INFO - Camera initialized successfully
+2025-10-04 11:41:52,544 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:42:13,871 - INFO - Starting motion detection
+2025-10-04 11:42:21,831 - INFO - Camera initialized successfully
+2025-10-04 11:42:54,043 - INFO - Starting motion detection
+2025-10-04 11:43:02,611 - INFO - Camera initialized successfully
+2025-10-04 11:43:11,268 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:45:05,689 - INFO - Starting motion detection
+2025-10-04 11:45:13,641 - INFO - Camera initialized successfully
+2025-10-04 11:45:14,300 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:45:27,577 - INFO - Starting motion detection
+2025-10-04 11:45:35,556 - INFO - Camera initialized successfully
+2025-10-04 11:45:41,210 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 592, 3)
+2025-10-04 11:46:15,731 - INFO - Starting motion detection
+2025-10-04 11:46:23,918 - INFO - Camera initialized successfully
+2025-10-04 11:46:24,534 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:48:17,081 - INFO - Starting motion detection
+2025-10-04 11:48:25,179 - INFO - Camera initialized successfully
+2025-10-04 11:48:25,959 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:49:28,783 - INFO - Starting motion detection
+2025-10-04 11:49:36,963 - INFO - Camera initialized successfully
+2025-10-04 11:49:55,639 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:52:42,487 - INFO - Starting motion detection
+2025-10-04 11:52:50,611 - INFO - Camera initialized successfully
+2025-10-04 11:52:51,300 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:53:26,886 - INFO - Starting motion detection
+2025-10-04 11:53:34,947 - INFO - Camera initialized successfully
+2025-10-04 11:53:35,586 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:54:36,974 - INFO - Starting motion detection
+2025-10-04 11:54:45,262 - INFO - Camera initialized successfully
+2025-10-04 11:54:48,771 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:54:51,730 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:54:55,248 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:54:59,251 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:54:59,727 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:00,258 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:00,731 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:01,262 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:01,741 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:02,250 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:02,738 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:03,241 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:23,739 - INFO - Starting motion detection
+2025-10-04 11:55:31,774 - INFO - Camera initialized successfully
+2025-10-04 11:55:40,998 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:41,159 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:41,835 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:41,994 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:42,156 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:42,318 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:42,471 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:42,786 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:43,007 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:43,163 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:43,333 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:43,473 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:43,641 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:55:47,140 - INFO - Cropped and compressed image from (480, 640, 3) to (479, 639, 3)
+2025-10-04 11:57:21,707 - INFO - Starting motion detection
+2025-10-04 11:57:29,964 - INFO - Camera initialized successfully
