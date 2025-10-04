@@ -9,6 +9,20 @@ from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt")  # load a pretrained model (recommended for training)
 
+allowed_classes = ["person",
+"bicycle",
+"car",
+"motorcycle",
+"airplane",
+"bus",
+"train",
+"truck",
+"boat",
+"backpack",
+"handbag",
+"laptop",
+"cell phone"]
+
 def get_latest_image(directory: Union[str, Path]) -> Optional[Path]:
     """
     Get the path of the most recently added image file in the specified directory.
@@ -72,14 +86,16 @@ def detect_objects(image_path: str, save_json: bool = True, output_dir: Optional
     for box in boxes:
         class_id = int(box.cls[0])
         class_name = names[class_id]
+
+        if class_name in allowed_classes:
         
-        # Update object counts
-        object_counts[class_name] = object_counts.get(class_name, 0) + 1
+            # Update object counts
+            object_counts[class_name] = object_counts.get(class_name, 0) + 1
+            
+            # Add detection details
+            detection = format_detection_for_json(box, class_name)
+            detections.append(detection)
         
-        # Add detection details
-        detection = format_detection_for_json(box, class_name)
-        detections.append(detection)
-    
     # Create output structure
     output = {
         "timestamp": timestamp,
@@ -104,21 +120,3 @@ def detect_objects(image_path: str, save_json: bool = True, output_dir: Optional
     
     return output
 
-if __name__ == "__main__":
-    # Get the latest image from motion_detected folder
-    motion_dir = Path("motion_detected")
-    latest_image = get_latest_image(motion_dir)
-    
-    if latest_image is None:
-        print("No images found to process")
-        exit(1)
-        
-    print(f"Processing latest image: {latest_image}")
-    results = detect_objects(str(latest_image))
-    
-    # Print summary
-    print("\nDetection Summary:")
-    print(f"Total detections: {results['total_detections']}")
-    print("\nObject counts:")
-    for obj, count in results['object_counts'].items():
-        print(f"{obj}: {count}")

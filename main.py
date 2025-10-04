@@ -7,7 +7,7 @@ import os
 import logging
 from server.detection import get_latest_image, detect_objects
 
-PIXEL_DIFF_THRESH = 0.1   # Threshold for pixel difference (0-1 range)
+PIXEL_DIFF_THRESH = 0.3   # Threshold for pixel difference (0-1 range)
 FRAME_SKIP = 60            # Process every Nth frame
 CAMERA_ID = 0
 KEEP_PREV_MOTION_PICS = False
