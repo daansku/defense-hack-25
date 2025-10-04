@@ -7,9 +7,9 @@ import os
 import logging
 from server.detection import get_latest_image, detect_objects
 
-PIXEL_DIFF_THRESH = 0.3   # Threshold for pixel difference (0-1 range)
-INITIAL_FRAME_SKIP = 60            # Process every Nth frame
-CAMERA_ID = 1
+PIXEL_DIFF_THRESH = 0.1   # Threshold for pixel difference (0-1 range)
+INITIAL_FRAME_SKIP = 30
+CAMERA_ID = 0
 KEEP_PREV_MOTION_PICS = False
 KEEP_PREV_CAPTURE_PICS = False
 COMPRESS_QUALITY = 30  
@@ -150,9 +150,6 @@ def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=
             
             # Crop the bounding box
             cropped = crop_to_grayscale(frame_to_crop, bbox)
-            
-            # Delete existing images in the folder
-            delete_all_images(output_dir)
             
             # Save the cropped image
             Path(output_dir).mkdir(exist_ok=True)
@@ -319,8 +316,9 @@ def process_folder_images(folder_path="captured_images"):
         frame_with_box = newest_frame.copy()
         cv2.rectangle(frame_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
         
-        # Save the frame with bounding box
+        # Save visualization
         save_frame(frame_with_box, output_dir="motion_detected")
+        save_frame(diff_vis, output_dir="motion_detected", is_visualization=True)
         
         return background_rgb, newest_frame, newest_rgb, bbox
     else:
@@ -347,10 +345,13 @@ def detect_obj():
         print(f"{obj}: {count}")
 
 
-def img_to_bytestr(img) -> str:
-    """Convert image to byte string"""
-    path = get_latest_image("motion_detected")
-    return cv2.imread(str(path), cv2.COLOR_BGR2GRAY).tobytes()
+def img_to_bytestr(path) -> bytes:
+    """Read an image and encode as JPEG bytes"""
+    img = cv2.imread(str(path), cv2.IMREAD_COLOR)   
+    success, encoded = cv2.imencode(".jpg", img)   
+    if not success:
+        raise ValueError("Could not encode image")
+    return encoded.tobytes()  
 
 
 def main():
@@ -382,6 +383,8 @@ def main():
         frame_idx = 0
         after_det_frames = 0 
         FRAME_SKIP = INITIAL_FRAME_SKIP
+
+
         
         while True:
             # Process every Nth frame
@@ -425,8 +428,7 @@ def main():
                         frame_with_box = frame.copy()
                         cv2.rectangle(frame_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
                         
-                        # Delete existing images and save the new frame with bounding box
-                        delete_all_images("motion_detected")
+                        # Save the frame with bounding box
                         save_frame(frame_with_box, output_dir="motion_detected")
 
                         if after_det_frames == MAX_AFTER_DET_FRAMES:
