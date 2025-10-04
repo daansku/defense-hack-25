@@ -427,13 +427,10 @@ def main():
                         # Draw rectangle on frame
                         frame_with_box = frame.copy()
                         cv2.rectangle(frame_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                        
-                        # Save the frame with bounding box
-                        save_frame(frame_with_box, output_dir="motion_detected")
 
                         if after_det_frames == MAX_AFTER_DET_FRAMES:
-                            detect_obj()
-                            print(img_to_bytestr(get_latest_image("motion_detected")))
+                            save_frame(frame_with_box, bbox=bbox, output_dir="/mnt")
+                            print("Saved final detection image to /mnt. Exiting...")
                             exit(0)
 
                         if FRAME_SKIP == INITIAL_FRAME_SKIP:
