@@ -1,6 +1,7 @@
 import pygame as pg
 from pathlib import Path
 import json
+import numpy as np
 
 # ------------- CONFIG -------------
 WIDTH, HEIGHT = 1000, 700
@@ -13,9 +14,15 @@ FONT_NAME = pg.font.get_default_font()
 
 NODES = {}
 nodes_ping_status = {}
+clicked_nodes = {}
+location_names = {}
+FRIENDLY_POSITIONS = {}  # Store friendly position coordinates
+friendly_names = {}  # Store friendly position names
 
 with open('server/nodes.json', 'r') as f:
     data = json.load(f)
+    
+    # Load regular nodes
     nodes = data['nodes']
     for node in nodes:
         name = str(node['id'])
@@ -23,6 +30,17 @@ with open('server/nodes.json', 'r') as f:
         y = node['coordinates']['y']
         NODES[name] = (x, y)
         nodes_ping_status[name] = False  # Initially, all nodes are unpinged
+        clicked_nodes[name] = False  # Initially, no nodes are clicked
+        location_names[name] = node['location_name']  # Store the location name
+    
+    # Load friendly positions
+    friendly_positions = data['friendly_positions']
+    for pos in friendly_positions:
+        name = str(pos['id'])
+        x = pos['coordinates']['x']
+        y = pos['coordinates']['y']
+        FRIENDLY_POSITIONS[name] = (x, y)
+        friendly_names[name] = pos['name']  # Store the friendly position name
 
 nodes_ping_status['2'] = True
 
@@ -30,6 +48,25 @@ nodes_ping_status['2'] = True
 IMAGE_SIZE_WORLD = (48, 48)  # size in *world* units so it scales with zoom
 
 # ------------- HELPERS -------------
+
+def calculate_regression_line(points):
+    """Calculate regression line parameters for a set of points."""
+    if len(points) < 2:
+        return None
+    
+    x = np.array([p[0] for p in points])
+    y = np.array([p[1] for p in points])
+    
+    # Calculate regression line
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, c = np.linalg.lstsq(A, y, rcond=None)[0]
+    
+    # Get line endpoints for visualization
+    x_min, x_max = min(x), max(x)
+    y_min = m * x_min + c
+    y_max = m * x_max + c
+    
+    return (x_min, y_min), (x_max, y_max)
 
 def load_image_or_placeholder(path_str: str, size: tuple[int, int]) -> pg.Surface:
     """Try loading an image; if missing, return a simple placeholder surface."""
@@ -90,9 +127,19 @@ def main():
                 running = False
 
             elif event.type == pg.MOUSEBUTTONDOWN:
-                if event.button == 1:  # left click starts drag
+                mouse_pos = pg.Vector2(event.pos)
+                if event.button == 1:  # left click
+                    # Check if clicked on any node
+                    world_mouse = camera.screen_to_world(mouse_pos)
+                    for node_id, pos in NODES.items():
+                        node_screen_pos = camera.world_to_screen(pos)
+                        distance = (node_screen_pos - mouse_pos).length()
+                        if distance <= NODE_RADIUS * camera.zoom:
+                            clicked_nodes[node_id] = not clicked_nodes[node_id]  # Toggle node state
+                            break
+                    # If not clicked on a node, start dragging
                     dragging = True
-                    last_mouse = pg.Vector2(event.pos)
+                    last_mouse = mouse_pos
                 elif event.button == 4:  # wheel up = zoom in
                     zoom_before = camera.zoom
                     camera.zoom = min(5.0, camera.zoom * 1.1)
@@ -129,11 +176,62 @@ def main():
             
             p = camera.world_to_screen(pos)
             r = max(2, int(NODE_RADIUS * camera.zoom * 0.8))
-            pg.draw.circle(screen, NODE_COLOR, p, r)
-            label = font.render(node_id, True, (10, 10, 10))
-            screen.blit(label, (p.x - label.get_width() // 2, p.y - label.get_height() // 2))
-            if nodes_ping_status[node_id]:
-                pg.draw.circle(screen, (255, 0, 0), p, r+4, 2)  # red ring for pinged nodes
+            # Draw node with red color if clicked, otherwise use default color
+            node_color = (255, 0, 0) if clicked_nodes[node_id] else NODE_COLOR
+            pg.draw.circle(screen, node_color, p, r)
+            
+            # Draw location name
+            location = location_names[node_id]
+            label = font.render(location, True, (240, 240, 255))  # White text for better visibility
+            
+            # Draw a semi-transparent background for the text
+            label_bg = pg.Surface((label.get_width() + 10, label.get_height() + 6))
+            label_bg.fill((40, 42, 48))  # Darker background color
+            label_bg.set_alpha(200)  # Semi-transparent
+            screen.blit(label_bg, (p.x - label_bg.get_width() // 2, p.y + r + 5))
+            
+            # Draw the text
+            screen.blit(label, (p.x - label.get_width() // 2, p.y + r + 8))
+            
+       
+        # Get clicked nodes and draw regression line if more than one
+        clicked_points = []
+        for node_id, is_clicked in clicked_nodes.items():
+            if is_clicked:
+                clicked_points.append(NODES[node_id])
+        
+        # Draw regression line if we have multiple clicked points
+        if len(clicked_points) >= 2:
+            # Calculate regression line in world coordinates
+            line_points = calculate_regression_line(clicked_points)
+            if line_points:
+                start_point, end_point = line_points
+                # Convert to screen coordinates
+                start_screen = camera.world_to_screen(start_point)
+                end_screen = camera.world_to_screen(end_point)
+                # Draw the line 
+            pg.draw.line(screen, (255, 100, 100), start_screen, end_screen, 4)
+
+        # Draw friendly positions (in green)
+        for pos_id, pos in FRIENDLY_POSITIONS.items():
+            p = camera.world_to_screen(pos)
+            r = max(2, int(NODE_RADIUS * camera.zoom * 0.8))
+            
+            # Draw green node
+            pg.draw.circle(screen, (0, 255, 0), p, r)
+            
+            # Draw location name
+            location = friendly_names[pos_id]
+            label = font.render(location, True, (200, 255, 200))  # Light green text
+            
+            # Draw a semi-transparent background for the text
+            label_bg = pg.Surface((label.get_width() + 10, label.get_height() + 6))
+            label_bg.fill((40, 48, 40))  # Dark green background
+            label_bg.set_alpha(200)  # Semi-transparent
+            screen.blit(label_bg, (p.x - label_bg.get_width() // 2, p.y + r + 5))
+            
+            # Draw the text
+            screen.blit(label, (p.x - label.get_width() // 2, p.y + r + 8))
 
         # # Draw images (scaled with zoom)
         # for node_id, base_img in base_images.items():

@@ -8,8 +8,8 @@ import logging
 from server.detection import get_latest_image, detect_objects
 
 PIXEL_DIFF_THRESH = 0.3   # Threshold for pixel difference (0-1 range)
-FRAME_SKIP = 60            # Process every Nth frame
-CAMERA_ID = 0
+INITIAL_FRAME_SKIP = 60            # Process every Nth frame
+CAMERA_ID = 1
 KEEP_PREV_MOTION_PICS = False
 KEEP_PREV_CAPTURE_PICS = False
 COMPRESS_QUALITY = 30  
@@ -150,6 +150,9 @@ def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=
             
             # Crop the bounding box
             cropped = crop_to_grayscale(frame_to_crop, bbox)
+            
+            # Delete existing images in the folder
+            delete_all_images(output_dir)
             
             # Save the cropped image
             Path(output_dir).mkdir(exist_ok=True)
@@ -316,9 +319,8 @@ def process_folder_images(folder_path="captured_images"):
         frame_with_box = newest_frame.copy()
         cv2.rectangle(frame_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
         
-        # Save visualization
+        # Save the frame with bounding box
         save_frame(frame_with_box, output_dir="motion_detected")
-        save_frame(diff_vis, output_dir="motion_detected", is_visualization=True)
         
         return background_rgb, newest_frame, newest_rgb, bbox
     else:
@@ -423,7 +425,8 @@ def main():
                         frame_with_box = frame.copy()
                         cv2.rectangle(frame_with_box, (x1, y1), (x2, y2), (0, 255, 0), 2)
                         
-                        # Save the frame with bounding box
+                        # Delete existing images and save the new frame with bounding box
+                        delete_all_images("motion_detected")
                         save_frame(frame_with_box, output_dir="motion_detected")
 
                         if after_det_frames == MAX_AFTER_DET_FRAMES:

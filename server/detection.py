@@ -99,6 +99,7 @@ def detect_objects(image_path: str, save_json: bool = True, output_dir: Optional
     # Create output structure
     output = {
         "timestamp": timestamp,
+        "node_id": 1, # TODO: Get actual node id from image path
         "image_path": image_path,
         "total_detections": len(detections),
         "object_counts": object_counts,

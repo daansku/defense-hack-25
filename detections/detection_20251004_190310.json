@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-10-04T19:03:10.504427",
+  "node_id": 1,
+  "image_path": "motion_detected\\capture_20251004_190309_841022.jpg",
+  "total_detections": 2,
+  "object_counts": {
+    "person": 2
+  },
+  "detections": [
+    {
+      "class_name": "person",
+      "confidence": 0.6628449559211731
+    },
+    {
+      "class_name": "person",
+      "confidence": 0.5093926787376404
+    }
+  ]
+}
