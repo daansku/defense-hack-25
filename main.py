@@ -15,6 +15,7 @@ KEEP_PREV_CAPTURE_PICS = False
 COMPRESS_QUALITY = 30  
 MAX_AFTER_DET_FRAMES = 5  # Number of frames to process after detection
 AFTER_DET_RATE = 20
+RASPI_ID = "1"
 
 # Set up logging
 logging.basicConfig(
@@ -154,7 +155,7 @@ def detect_motion(image1: np.ndarray, image2: np.ndarray, thresh=0.1, save_crop=
             # Save the cropped image
             Path(output_dir).mkdir(exist_ok=True)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            crop_filename = os.path.join(output_dir, f"cropped_{timestamp}.jpg")
+            crop_filename = os.path.join(output_dir, f"cropped_{timestamp}_{RASPI_ID}.jpg")
             cv2.imwrite(crop_filename, cropped)
             logging.info(f"Saved cropped image: {crop_filename} (size: {cropped.shape})")
         
