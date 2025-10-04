@@ -1,0 +1,42 @@
+{
+    "nodes": [
+        {
+        "id": 1,
+        "location_name": "Lobby",
+        "description": "The main entrance area with seating and information desk.",
+        "coordinates": {"x": 300, "y": 300}
+        },
+        {
+            "id": 2,
+            "location_name": "Hallway",
+            "description": "A long corridor with doors to various rooms.",
+            "coordinates": {"x": 92, "y": 264}
+        },
+        {
+            "id": 3,
+            "location_name": "Conference Room",
+            "description": "A room equipped for meetings and presentations.",
+            "coordinates": {"x": 190, "y": 200}
+        },
+        {
+            "id": 4,
+            "location_name": "Cafeteria",
+            "description": "A place to eat and relax with colleagues.",
+            "coordinates": {"x": 12, "y": 36}
+        }
+    ],
+    "friendly_positions": [
+        {
+            "id": 1,
+            "name": "Lobby",
+            "description": "The main entrance area with seating and information desk.",
+            "coordinates": {"x": 3, "y": 3}
+        },
+        {
+            "id": 2,
+            "name": "Cafeteria",
+            "description": "A place to eat and relax with colleagues.",
+            "coordinates": {"x": 2, "y": 3}
+        }
+    ]
+}
